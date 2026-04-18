@@ -1,0 +1,30 @@
+<mat-card class="chat-card">
+  <mat-card-header>
+    <mat-card-title>Game Chat</mat-card-title>
+  </mat-card-header>
+  <mat-card-content class="chat-content">
+    <div class="messages-container" #messagesContainer>
+      @for (message of messages(); track message.timestamp) {
+        <div class="message" [class.user-message]="message.sender === 'user'" [class.bot-message]="message.sender === 'bot'">
+          <div class="message-text">{{ message.text }}</div>
+          <div class="message-time">{{ message.timestamp | date:'shortTime' }}</div>
+        </div>
+      }
+    </div>
+    <div class="input-container">
+      <mat-form-field appearance="outline" class="input-field">
+        <mat-label>Type your message...</mat-label>
+        <input matInput
+               [(ngModel)]="inputValue"
+               (keydown.enter)="sendMessage()"
+               placeholder="Ask about games...">
+      </mat-form-field>
+      <button mat-icon-button
+              (click)="sendMessage()"
+              [disabled]="!inputValue().trim()"
+              color="primary">
+        <mat-icon>send</mat-icon>
+      </button>
+    </div>
+  </mat-card-content>
+</mat-card>

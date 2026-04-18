@@ -11,6 +11,8 @@ import { RouterLink } from '@angular/router';
 export class SidebarNavigation {
   public routeLinks = [
     { name: "Home", link: "home" },
+    { name: "Search", link: "search" },
+    { name: "Chat", link: "chat" },
     { name: "About", link: "about" }
   ];
 }

@@ -6,17 +6,25 @@
     <mat-sidenav-content>
         <mat-toolbar>
             <mat-toolbar-row>
-            <span>
-                Shade and Friends Play Videogames
-            </span>
+                <mat-icon
+                    class="sidenav-toggle"
+                    role="button"
+                    tabindex="0"
+                    style="cursor: pointer; margin-right: 12px;"
+                    (click)="sidenav.toggle()"
+                    (keydown.enter)="sidenav.toggle()"
+                    (keydown.space)="sidenav.toggle()"
+                >
+                    {{ sidenav.opened ? 'chevron_left' : 'chevron_right' }}
+                </mat-icon>
+                <span>
+                    Shade and Friends Play Videogames
+                </span>
             </mat-toolbar-row>
         </mat-toolbar>
 
         <div class="content-container">
             <router-outlet></router-outlet>
-            <button type="button" mat-button (click)="sidenav.toggle()">
-            Toggle sidenav
-            </button>
         </div>
     </mat-sidenav-content>
 </mat-sidenav-container>

@@ -5,11 +5,9 @@ import { SidebarNavigation } from '../sidebar-navigation/sidebar-navigation';
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [MatToolbar, MatToolbarRow, SidebarNavigation
-  ],
+  imports: [],
   templateUrl: './home.html',
   styleUrls: ['./home.scss']
 })
 export class Home {
-
 }

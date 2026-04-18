@@ -2,7 +2,12 @@ import { Component, signal } from '@angular/core';
 import { SidebarNavigation } from './sidebar-navigation/sidebar-navigation';
 import { MatSidenavContainer, MatSidenav, MatSidenavContent } from '@angular/material/sidenav';
 import { MatToolbar, MatToolbarRow } from '@angular/material/toolbar';
+import { MatIconModule } from '@angular/material/icon';
 import { RouterOutlet } from '@angular/router';
+import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
+
+// Register all Community features
+ModuleRegistry.registerModules([AllCommunityModule]);
 
 /*
   Sidebar navigation component providing links to different sections of the app.
@@ -13,6 +18,7 @@ import { RouterOutlet } from '@angular/router';
   standalone: true,
   imports: [ MatSidenavContainer, MatSidenav, MatSidenavContent,
     MatToolbar, MatToolbarRow,
+    MatIconModule,
     SidebarNavigation,
     RouterOutlet
   ],
