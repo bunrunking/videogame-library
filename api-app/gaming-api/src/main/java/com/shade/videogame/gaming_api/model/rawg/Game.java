@@ -1,0 +1,19 @@
+package com.shade.videogame.gaming_api.model.rawg;
+
+import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import lombok.Data;
+import lombok.ToString;
+
+@Data
+@ToString
+public class Game {
+    private String name;
+
+    @JsonProperty("background_image")
+    private String backgroundImage;
+
+    private List<PlatformListResponse> platforms;
+}

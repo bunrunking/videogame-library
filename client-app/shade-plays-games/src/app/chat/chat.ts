@@ -7,12 +7,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
-
-interface Message {
-  sender: 'user' | 'bot';
-  text: string;
-  timestamp: Date;
-}
+import { ChatService } from './chat.service';
+import { ChatResponse } from './chatresponse.model';
+import { Message } from './message';
 
 @Component({
   selector: 'app-chat',
@@ -32,6 +29,8 @@ interface Message {
 export class Chat implements AfterViewChecked {
   @ViewChild('messagesContainer') private messagesContainer!: ElementRef;
 
+  constructor(private chatService: ChatService) {}
+
   messages = signal<Message[]>([
     { sender: 'bot', text: 'Hello! How can I help you with games today?', timestamp: new Date() }
   ]);
@@ -48,13 +47,15 @@ export class Chat implements AfterViewChecked {
         { sender: 'user', text: this.inputValue().trim(), timestamp: new Date() }
       ]);
       this.inputValue.set('');
-      // Simulate bot response
-      setTimeout(() => {
+
+      // Send the last X messages to the backend for processing.
+      this.chatService.submitChat(this.messages()).subscribe((response: Message) => {
         this.messages.update(msgs => [
           ...msgs,
-          { sender: 'bot', text: 'Thanks for your message! This is a demo response.', timestamp: new Date() }
+          response
         ]);
-      }, 1000);
+      });
+
     }
   }
 

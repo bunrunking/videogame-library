@@ -6,6 +6,8 @@ import org.openapitools.model.GamesList200Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
 
 import com.shade.videogame.gaming_api.model.rawg.GameListResponse;
@@ -20,15 +22,21 @@ public class RawgService {
     @Autowired
     private RestClient restClient;
 
-    public void search(String keyword) {
+    public GameListResponse search(String keyword) {
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("key", apiKey);
+        params.add("search", keyword);
+        params.add("search_precise", "true");
+
         GameListResponse response = restClient.get()
                 .uri(uriBuilder -> uriBuilder
                 .path("/games")
-                .queryParam("key", apiKey)
-                .queryParam("search", keyword)
+                .queryParams(params)
                 .build())
                 .retrieve()
                 .body(GameListResponse.class);
-        logger.info("Fetched games for keyword: {}, total: {}", keyword, response.getCount());
+        logger.info("Fetched games for keyword: {}, total #: {}", keyword, response.getCount());
+
+        return response;
     }
 }

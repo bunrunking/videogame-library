@@ -4,6 +4,11 @@
 
 <mat-nav-list>
 @for (link of routeLinks; track link) {
-    <div><a mat-list-item routerLink="{{ link.link}}">{{ link.name }}</a></div>
+    <div>
+      <a mat-list-item routerLink="{{ link.link }}">
+        <mat-icon aria-hidden="true">{{ link.icon }}</mat-icon>
+        <span class="link-label">{{ link.name }}</span>
+      </a>
+    </div>
 }
 </mat-nav-list>

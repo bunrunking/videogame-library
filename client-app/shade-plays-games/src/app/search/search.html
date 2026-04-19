@@ -1,0 +1,37 @@
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>Game Search</mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <form #searchForm="ngForm" (ngSubmit)="onSubmit(searchForm)">
+      <mat-form-field appearance="fill">
+        <mat-label>Search Keyword</mat-label>
+        <input matInput type="text" name="keyword" [(ngModel)]="keyword" required>
+      </mat-form-field>
+
+      <div>
+        <button mat-raised-button color="primary" type="submit" [disabled]="searchForm.invalid">Search</button>
+      </div>
+    </form>
+
+    @if (dataSource.length > 0) {
+    <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
+      <!-- ID Column -->
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef> Name </th>
+        <td mat-cell *matCellDef="let element"> {{element.name}} </td>
+      </ng-container>
+
+      <!-- Name Column -->
+      <ng-container matColumnDef="imageUrl">
+        <th mat-header-cell *matHeaderCellDef> Image </th>
+        <td mat-cell *matCellDef="let element"> <img [src]="element.background_image" alt="{{element.name}}" /> </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+    </table>
+  }
+  </mat-card-content>
+</mat-card>
