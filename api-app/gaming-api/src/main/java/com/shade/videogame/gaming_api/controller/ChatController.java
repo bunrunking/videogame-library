@@ -23,14 +23,10 @@ public class ChatController {
     
     @PostMapping
     public ChatMessage chat(@RequestBody List<ChatMessage> messages) throws IOException {
-        logger.info("Received " + messages.size() + " messages in request body");
+        logger.info("Received [" + messages + " ] in request body");
         
-        // Return the message from the chat bot api.
-        String botResponse = "Hello! This is a response from the chat bot API.";
-        ChatMessage botMessage = new ChatMessage("bot", botResponse);
-        
-        chatService.chat(messages);
-
+        // Return the message from the chat.
+        ChatMessage botMessage = chatService.chat(messages);
         return botMessage;
     }
 
