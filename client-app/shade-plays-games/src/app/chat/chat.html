@@ -5,8 +5,8 @@
   <mat-card-content class="chat-content">
     <div class="messages-container" #messagesContainer>
       @for (message of messages(); track message.timestamp) {
-        <div class="message" [class.user-message]="message.sender === 'user'" [class.bot-message]="message.sender === 'bot'">
-          <div class="message-text">{{ message.text }}</div>
+        <div class="message" [class.user-message]="message.role === 'user'" [class.bot-message]="message.role === 'assistant'">
+          <div class="message-text">{{ message.content }}</div>
           <div class="message-time">{{ message.timestamp | date:'shortTime' }}</div>
         </div>
       }

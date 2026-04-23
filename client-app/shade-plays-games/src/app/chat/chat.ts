@@ -32,7 +32,7 @@ export class Chat implements AfterViewChecked {
   constructor(private chatService: ChatService) {}
 
   messages = signal<Message[]>([
-    { sender: 'bot', text: 'Hello! How can I help you with games today?', timestamp: new Date() }
+    { role: 'assistant', content: 'Hello! How can I help you with games today?', timestamp: new Date() }
   ]);
   inputValue = signal('');
 
@@ -44,7 +44,7 @@ export class Chat implements AfterViewChecked {
     if (this.inputValue().trim()) {
       this.messages.update(msgs => [
         ...msgs,
-        { sender: 'user', text: this.inputValue().trim(), timestamp: new Date() }
+        { role: 'user', content: this.inputValue().trim(), timestamp: new Date() }
       ]);
       this.inputValue.set('');
 

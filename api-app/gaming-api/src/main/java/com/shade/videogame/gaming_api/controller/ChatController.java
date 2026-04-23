@@ -1,5 +1,6 @@
 package com.shade.videogame.gaming_api.controller;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -21,12 +22,14 @@ public class ChatController {
     private ChatService chatService;
     
     @PostMapping
-    public ChatMessage chat(@RequestBody List<ChatMessage> messages) {
+    public ChatMessage chat(@RequestBody List<ChatMessage> messages) throws IOException {
         logger.info("Received " + messages.size() + " messages in request body");
         
         // Return the message from the chat bot api.
         String botResponse = "Hello! This is a response from the chat bot API.";
         ChatMessage botMessage = new ChatMessage("bot", botResponse);
+        
+        chatService.chat(messages);
 
         return botMessage;
     }
