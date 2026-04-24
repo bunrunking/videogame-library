@@ -12,6 +12,6 @@ export class ChatService {
   constructor(private http: HttpClient) { }
 
   submitChat(messages: Message[]) {
-    return this.http.post<Message>(this.apiUrl, messages);
+    return this.http.post<Message[]>(this.apiUrl, messages);
   }
 }

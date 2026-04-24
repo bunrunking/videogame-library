@@ -12,7 +12,7 @@ public class ToolsDefinition {
         @JsonPropertyDescription("The platform or console for the videogame.")
         public String platform;
         
-        @JsonPropertyDescription("Whether this is in the user's collection or wishlist.")
+        @JsonPropertyDescription("One of: OWN, SOLD, WISH")
         public String listType;
 
         public String execute() {

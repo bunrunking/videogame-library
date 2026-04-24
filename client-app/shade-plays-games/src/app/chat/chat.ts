@@ -9,7 +9,6 @@ import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { finalize } from 'rxjs';
 import { ChatService } from './chat.service';
-import { ChatResponse } from './chatresponse.model';
 import { Message } from './message';
 
 @Component({
@@ -59,10 +58,10 @@ export class Chat implements AfterViewChecked {
     this.chatService.submitChat(this.messages())
       .pipe(finalize(() => this.isSending.set(false)))
       .subscribe({
-        next: (response: Message) => {
+        next: (response: Message[]) => {
           this.messages.update(msgs => [
             ...msgs,
-            response
+            ...response
           ]);
         },
         error: () => {

@@ -29,11 +29,15 @@ public class ChatService {
 	private String openAiApiKey;
 	
     @Value("classpath:prompt/system.md")
-    private Resource resource;
+    private Resource systemResource;
     
-	public ChatMessage chat(List<ChatMessage> messages) throws IOException {
+    @Value("classpath:prompt/tools.md")
+    private Resource toolsResource;
+    
+	public List<ChatMessage> chat(List<ChatMessage> messages) throws IOException {
+		List<ChatMessage> responseMessages = new ArrayList<ChatMessage>();
 		List<Map<String, String>> conversation = new ArrayList<Map<String, String>>();
-		addConversation(conversation, "system", readPromptFile());
+		addConversation(conversation, "system", readPromptFiles());
 		addConversation(conversation, messages);
 		
 		// Create an OpenAI client using environment variables for configuration.  This client should create parameters
@@ -58,15 +62,17 @@ public class ChatService {
 		logger.info("Parsed message text: " + responseText);
 		if (!responseText.isBlank()) {
 			botMessage = new ChatMessage("assistant", responseText);
+			responseMessages.add(botMessage);
 		}
 		
 		String toolResponse = extractToolResponse(response);
 		logger.info("Parsed tool response: " + toolResponse);
 		if (!toolResponse.isBlank()) {
 			botMessage = new ChatMessage("assistant", toolResponse);
+			responseMessages.add(botMessage);
 		}
 		
-		return botMessage;
+		return responseMessages;
 	}
 	
 	private void addConversation(List<Map<String, String>> currentConversation, List<ChatMessage> messages) {
@@ -82,13 +88,17 @@ public class ChatService {
 		return currentConversation;
 	}
 	
-    private String readPromptFile() throws IOException {
-        return new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+    private String readPromptFiles() throws IOException {
+    	StringBuilder promptBuilder = new StringBuilder();
+    	
+    	promptBuilder.append(new String(systemResource.getInputStream().readAllBytes(), StandardCharsets.UTF_8));
+    	promptBuilder.append(new String(toolsResource.getInputStream().readAllBytes(), StandardCharsets.UTF_8));
+    	
+    	return promptBuilder.toString();
     }
     
     private String extractText(Response response) {
         StringBuilder result = new StringBuilder();
-
         for (ResponseOutputItem item : response.output()) {
         	if (item.isMessage()) {
         		item.asMessage().content().forEach(content -> {

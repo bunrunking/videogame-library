@@ -22,12 +22,12 @@ public class ChatController {
     private ChatService chatService;
 
     @PostMapping
-    public ChatMessage chat(@RequestBody List<ChatMessage> messages) throws IOException {
+    public List<ChatMessage> chat(@RequestBody List<ChatMessage> messages) throws IOException {
         logger.info("Received [" + messages + " ] in request body");
         
         // Return the message from the chat.
-        ChatMessage botMessage = chatService.chat(messages);
-        return botMessage;
+        List<ChatMessage> botMessages = chatService.chat(messages);
+        return botMessages;
     }
 
 }
