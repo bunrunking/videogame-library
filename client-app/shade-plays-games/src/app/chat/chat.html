@@ -21,7 +21,7 @@
       </mat-form-field>
       <button mat-icon-button
               (click)="sendMessage()"
-              [disabled]="!inputValue().trim()"
+              [disabled]="isSending() || !inputValue().trim()"
               color="primary">
         <mat-icon>send</mat-icon>
       </button>

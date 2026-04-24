@@ -20,7 +20,7 @@ public class ChatController {
 
     @Autowired
     private ChatService chatService;
-    
+
     @PostMapping
     public ChatMessage chat(@RequestBody List<ChatMessage> messages) throws IOException {
         logger.info("Received [" + messages + " ] in request body");

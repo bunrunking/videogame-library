@@ -11,15 +11,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.openai.client.OpenAIClient;
 import com.openai.client.okhttp.OpenAIOkHttpClient;
 import com.openai.models.responses.Response;
-import com.openai.models.responses.ResponseContent;
 import com.openai.models.responses.ResponseCreateParams;
 import com.openai.models.responses.ResponseOutputItem;
-import com.openai.models.responses.ResponseOutputMessage;
-import com.openai.models.responses.ResponseOutputText;
 import com.shade.videogame.gaming_api.model.common.ChatMessage;
 
 @Service
@@ -46,14 +45,27 @@ public class ChatService {
 		ObjectMapper objectMapper = new ObjectMapper();
 		ResponseCreateParams params = ResponseCreateParams.builder()
 		        .model("gpt-4.1-nano")
+		        .addTool(ToolsDefinition.GetVideogameList.class)
 		        .input(objectMapper.writeValueAsString(conversation))
 		        .build();
 		
 		Response response = client.responses().create(params);
-		String responseText = extractText(response);
-		logger.info("Received response from OpenAI API: " + responseText);
+		logger.info("Received response from OpenAI API: " + response);
 		
-		ChatMessage botMessage = new ChatMessage("assistant", responseText);
+		ChatMessage botMessage = null;
+		
+		String responseText = extractText(response);
+		logger.info("Parsed message text: " + responseText);
+		if (!responseText.isBlank()) {
+			botMessage = new ChatMessage("assistant", responseText);
+		}
+		
+		String toolResponse = extractToolResponse(response);
+		logger.info("Parsed tool response: " + toolResponse);
+		if (!toolResponse.isBlank()) {
+			botMessage = new ChatMessage("assistant", toolResponse);
+		}
+		
 		return botMessage;
 	}
 	
@@ -84,6 +96,34 @@ public class ChatService {
 						result.append(content.asOutputText().text());
 					}
 				});
+        	}
+        }
+
+        return result.toString();
+    }
+    
+    private String extractToolResponse(Response response) {
+        StringBuilder result = new StringBuilder();
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        for (ResponseOutputItem item : response.output()) {
+        	if (item.isFunctionCall()) {
+        		logger.info("Function call found in response: " + item);
+        		
+        		String argsString = item.asFunctionCall().arguments();
+        		try {
+					@SuppressWarnings("unchecked")
+					Map<String, String> args = objectMapper.readValue(argsString, Map.class);
+					
+					logger.info("Parsed function call arguments: " + args);
+					result.append(args);
+				} catch (JsonMappingException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (JsonProcessingException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
         	}
         }
 
