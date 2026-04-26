@@ -4,20 +4,28 @@ import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 
 public class ToolsDefinition {
-    @JsonClassDescription("Gets the videogames in the user's collection or wishlist.")
-    static class GetVideogameList {
-        @JsonPropertyDescription("The name of the videogame.")
-        public String title;
+	@JsonClassDescription("Gets videogames from the user's collection, wishlist, or sold list.")
+	static class GetVideogameList {
 
-        @JsonPropertyDescription("The platform or console for the videogame.")
-        public String platform;
-        
-        @JsonPropertyDescription("One of: OWN, SOLD, WISH")
-        public String listType;
+	    @JsonPropertyDescription("Optional. Name of the videogame to filter by.")
+	    public String title;
 
-        public String execute() {
-            return "You asked for the " + listType + " of " + title + " on " + platform + ".";
-        }
-    }
-    
+	    @JsonPropertyDescription("Optional. Platform of the videogame.  If not provided, will return games from all platforms.")
+	    public Platform platform;
+
+	    @JsonPropertyDescription("Which list to query.  Only use OWN if the user asks what games they have in their collection.")
+	    public ListType listType;
+
+	    public enum Platform {
+	        PLAYSTATION_1, PLAYSTATION_2, PLAYSTATION_3, PLAYSTATION_4, PLAYSTATION_5,
+	        XBOX, XBOX_360,
+	        NINTENDO_SWITCH, NINTENDO_WII, NINTENDO_WII_U,
+	        NINTENDO_GAMECUBE, NINTENDO_64,
+	        SEGA_GENESIS, SEGA_SATURN, SEGA_DREAMCAST
+	    }
+
+	    public enum ListType {
+	        OWN, SOLD, WISH
+	    }
+	}
 }
