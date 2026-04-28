@@ -44,7 +44,7 @@ public class ChatService {
     @Autowired
     VideogameService videogameService;
     
-	public List<ChatMessage> chat(List<ChatMessage> messages, boolean firstCall) throws IOException {
+	public List<ChatMessage> chat(List<ChatMessage> messages) throws IOException {
 		List<ChatMessage> responseMessages = new ArrayList<ChatMessage>();
 		List<Map<String, String>> conversation = new ArrayList<Map<String, String>>();
 		addConversation(conversation, "system", readPromptFiles(), null);
@@ -64,7 +64,6 @@ public class ChatService {
 		        .build();
 		
 		Response response = client.responses().create(params);
-		logger.info("Received response from OpenAI API: " + response);
 		
 		ChatMessage botMessage = null;
 		
@@ -76,32 +75,24 @@ public class ChatService {
 		}
 		
 		List<ToolsRequest> toolsRequests = extractToolResponse(response);
-		if (!toolsRequests.isEmpty() && firstCall) {
+		if (!toolsRequests.isEmpty()) {
 			logger.info("Parsed tool requests: " + toolsRequests);
 			
 			for (ToolsRequest toolRequest : toolsRequests) {
-				// Call the tool and then respond back to the user with the results of the tool call.
-				if (toolRequest.getFunctionName().equals("GetVideogameList")) {
-					String platform = toolRequest.getFunctionArgs().get("platform");
-					String playStatus = toolRequest.getFunctionArgs().get("playStatus");
-					String title = toolRequest.getFunctionArgs().get("title");
-					Integer page = toolRequest.getFunctionArgs().get("page") != null ? Integer.valueOf(toolRequest.getFunctionArgs().get("page")) : 0;
-					PageRequest request = PageRequest.of(page, 25);
-					
-					Platform platformEnum = platform != null ? Platform.valueOf(platform) : null;
-					PlayStatus playStatusEnum = playStatus != null ? PlayStatus.valueOf(playStatus) : null;
-					
-					Page<Videogame> games = videogameService.findByCriteria(platformEnum, playStatusEnum, title, request);
-					logger.info("Retrieved games from database: " + games.getContent());
-					logger.info("Page info - total pages: " + games.getTotalPages() + ", current page: " + games.getNumber());
-					
-					ObjectMapper mapper = new ObjectMapper();
-					ChatMessage toolResponseMessage = new ChatMessage("tool", mapper.writeValueAsString(games), toolRequest.getCallerId());
-					messages.add(toolResponseMessage);
-					
-					responseMessages.addAll(chat(messages, false));
-				}				
+				// Add the tool call to the conversation so that the model has the full context of the conversation and can respond appropriately after the tool is called.
+				botMessage = new ChatMessage("assistant", toolRequest.getToolCall(), null);
+				responseMessages.add(botMessage);
+				
+				String toolResult = invokeTool(toolRequest);
+				
+				if (toolResult != null) {
+					ChatMessage toolResponseMessage = new ChatMessage("tool", toolResult, toolRequest.getCallerId());
+					responseMessages.add(toolResponseMessage);
+				}
 			}
+			
+			messages.addAll(responseMessages);
+			responseMessages.addAll(chat(messages));
 		}
 		
 		return responseMessages;
@@ -147,14 +138,15 @@ public class ChatService {
         return result.toString();
     }
     
-    private List<ToolsRequest> extractToolResponse(Response response) {
+    private List<ToolsRequest> extractToolResponse(Response response) throws IOException{
     	List<ToolsRequest> toolsRequest = new ArrayList<ToolsRequest>();
 
         ObjectMapper objectMapper = new ObjectMapper();
         for (ResponseOutputItem item : response.output()) {
         	if (item.isFunctionCall()) {
         		ToolsRequest toolRequest = new ToolsRequest();
-        		
+
+        		toolRequest.setToolCall(objectMapper.writeValueAsString(item.asFunctionCall()));
         		toolRequest.setCallerId(item.asFunctionCall().id().get());
         		toolRequest.setFunctionName(item.asFunctionCall().name());
         		
@@ -177,4 +169,28 @@ public class ChatService {
 
         return toolsRequest;
     }
+    
+    private String invokeTool(ToolsRequest toolRequest) throws IOException {
+		// Call the tool and then respond back to the user with the results of the tool call.
+		if (toolRequest.getFunctionName().equals("GetVideogameList")) {
+			ObjectMapper mapper = new ObjectMapper();
+			
+			String platform = toolRequest.getFunctionArgs().get("platform");
+			String playStatus = toolRequest.getFunctionArgs().get("playStatus");
+			String title = toolRequest.getFunctionArgs().get("title");
+			Integer page = toolRequest.getFunctionArgs().get("page") != null ? Integer.valueOf(toolRequest.getFunctionArgs().get("page")) : 0;
+			PageRequest request = PageRequest.of(page, 25);
+			
+			Platform platformEnum = platform != null ? Platform.valueOf(platform) : null;
+			PlayStatus playStatusEnum = playStatus != null ? PlayStatus.valueOf(playStatus) : null;
+			
+			Page<Videogame> games = videogameService.findByCriteria(platformEnum, playStatusEnum, title, request);
+			logger.info("Retrieved games from database: " + games.getContent());
+			logger.info("Page info - total pages: " + games.getTotalPages() + ", current page: " + games.getNumber());
+			
+			return mapper.writeValueAsString(games);
+		}
+		
+		throw new IllegalArgumentException("Unsupported tool function: " + toolRequest.getFunctionName());
+	}
 }

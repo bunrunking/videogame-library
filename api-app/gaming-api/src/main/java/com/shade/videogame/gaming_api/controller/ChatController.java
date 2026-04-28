@@ -26,7 +26,7 @@ public class ChatController {
         logger.info("Received [" + messages + " ] in request body");
         
         // Return the message from the chat.
-        List<ChatMessage> botMessages = chatService.chat(messages, true);
+        List<ChatMessage> botMessages = chatService.chat(messages);
         return botMessages;
     }
 

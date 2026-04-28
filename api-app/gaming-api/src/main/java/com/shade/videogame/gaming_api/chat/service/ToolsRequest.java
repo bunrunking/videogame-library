@@ -11,5 +11,7 @@ import lombok.ToString;
 public class ToolsRequest {
 	private String functionName;
 	private String callerId;
-	private Map<String, String> functionArgs;	
+	private Map<String, String> functionArgs;
+	
+	private String toolCall;
 }
