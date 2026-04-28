@@ -1,4 +1,4 @@
-package com.shade.videogame.gaming_api.service;
+package com.shade.videogame.gaming_api.rawg.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,7 +9,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
 
-import com.shade.videogame.gaming_api.model.rawg.GameListResponse;
+import com.shade.videogame.gaming_api.rawg.model.GameListResponse;
 
 @Service
 public class RawgService {

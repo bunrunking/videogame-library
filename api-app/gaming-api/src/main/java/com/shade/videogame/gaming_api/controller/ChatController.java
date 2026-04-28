@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.shade.videogame.gaming_api.model.common.ChatMessage;
-import com.shade.videogame.gaming_api.service.ChatService;
+import com.shade.videogame.gaming_api.chat.model.ChatMessage;
+import com.shade.videogame.gaming_api.chat.service.ChatService;
 
 @RestController
 @RequestMapping("/api/chat")
@@ -26,7 +26,7 @@ public class ChatController {
         logger.info("Received [" + messages + " ] in request body");
         
         // Return the message from the chat.
-        List<ChatMessage> botMessages = chatService.chat(messages);
+        List<ChatMessage> botMessages = chatService.chat(messages, true);
         return botMessages;
     }
 

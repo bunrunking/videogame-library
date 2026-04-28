@@ -1,7 +1,9 @@
-package com.shade.videogame.gaming_api.service;
+package com.shade.videogame.gaming_api.chat.service;
 
 import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
+import com.shade.videogame.gaming_api.inventory.model.ListType;
+import com.shade.videogame.gaming_api.inventory.model.Platform;
 
 public class ToolsDefinition {
 	@JsonClassDescription("Gets videogames from the user's collection, wishlist, or sold list.")
@@ -15,17 +17,8 @@ public class ToolsDefinition {
 
 	    @JsonPropertyDescription("Which list to query.  Only use OWN if the user asks what games they have in their collection.")
 	    public ListType listType;
-
-	    public enum Platform {
-	        PLAYSTATION_1, PLAYSTATION_2, PLAYSTATION_3, PLAYSTATION_4, PLAYSTATION_5,
-	        XBOX, XBOX_360,
-	        NINTENDO_SWITCH, NINTENDO_WII, NINTENDO_WII_U,
-	        NINTENDO_GAMECUBE, NINTENDO_64,
-	        SEGA_GENESIS, SEGA_SATURN, SEGA_DREAMCAST
-	    }
-
-	    public enum ListType {
-	        OWN, SOLD, WISH
-	    }
+	    
+	    @JsonPropertyDescription("The pages of results to show.  Starting at 0, default is 0.  If the user asks for more results, increment this page number by 1 and call the function again with the same parameters.")
+	    public String page;
 	}
 }

@@ -1,4 +1,4 @@
-package com.shade.videogame.gaming_api.service;
+package com.shade.videogame.gaming_api.chat.service;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -7,8 +7,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -19,7 +22,11 @@ import com.openai.client.okhttp.OpenAIOkHttpClient;
 import com.openai.models.responses.Response;
 import com.openai.models.responses.ResponseCreateParams;
 import com.openai.models.responses.ResponseOutputItem;
-import com.shade.videogame.gaming_api.model.common.ChatMessage;
+import com.shade.videogame.gaming_api.chat.model.ChatMessage;
+import com.shade.videogame.gaming_api.inventory.model.Platform;
+import com.shade.videogame.gaming_api.inventory.model.PlayStatus;
+import com.shade.videogame.gaming_api.inventory.model.Videogame;
+import com.shade.videogame.gaming_api.inventory.service.VideogameService;
 
 @Service
 public class ChatService {
@@ -34,10 +41,13 @@ public class ChatService {
     @Value("classpath:prompt/tools.md")
     private Resource toolsResource;
     
-	public List<ChatMessage> chat(List<ChatMessage> messages) throws IOException {
+    @Autowired
+    VideogameService videogameService;
+    
+	public List<ChatMessage> chat(List<ChatMessage> messages, boolean firstCall) throws IOException {
 		List<ChatMessage> responseMessages = new ArrayList<ChatMessage>();
 		List<Map<String, String>> conversation = new ArrayList<Map<String, String>>();
-		addConversation(conversation, "system", readPromptFiles());
+		addConversation(conversation, "system", readPromptFiles(), null);
 		addConversation(conversation, messages);
 		
 		// Create an OpenAI client using environment variables for configuration.  This client should create parameters
@@ -61,15 +71,37 @@ public class ChatService {
 		String responseText = extractText(response);
 		logger.info("Parsed message text: " + responseText);
 		if (!responseText.isBlank()) {
-			botMessage = new ChatMessage("assistant", responseText);
+			botMessage = new ChatMessage("assistant", responseText, null);
 			responseMessages.add(botMessage);
 		}
 		
-		String toolResponse = extractToolResponse(response);
-		logger.info("Parsed tool response: " + toolResponse);
-		if (!toolResponse.isBlank()) {
-			botMessage = new ChatMessage("assistant", toolResponse);
-			responseMessages.add(botMessage);
+		List<ToolsRequest> toolsRequests = extractToolResponse(response);
+		if (!toolsRequests.isEmpty() && firstCall) {
+			logger.info("Parsed tool requests: " + toolsRequests);
+			
+			for (ToolsRequest toolRequest : toolsRequests) {
+				// Call the tool and then respond back to the user with the results of the tool call.
+				if (toolRequest.getFunctionName().equals("GetVideogameList")) {
+					String platform = toolRequest.getFunctionArgs().get("platform");
+					String playStatus = toolRequest.getFunctionArgs().get("playStatus");
+					String title = toolRequest.getFunctionArgs().get("title");
+					Integer page = toolRequest.getFunctionArgs().get("page") != null ? Integer.valueOf(toolRequest.getFunctionArgs().get("page")) : 0;
+					PageRequest request = PageRequest.of(page, 25);
+					
+					Platform platformEnum = platform != null ? Platform.valueOf(platform) : null;
+					PlayStatus playStatusEnum = playStatus != null ? PlayStatus.valueOf(playStatus) : null;
+					
+					Page<Videogame> games = videogameService.findByCriteria(platformEnum, playStatusEnum, title, request);
+					logger.info("Retrieved games from database: " + games.getContent());
+					logger.info("Page info - total pages: " + games.getTotalPages() + ", current page: " + games.getNumber());
+					
+					ObjectMapper mapper = new ObjectMapper();
+					ChatMessage toolResponseMessage = new ChatMessage("tool", mapper.writeValueAsString(games), toolRequest.getCallerId());
+					messages.add(toolResponseMessage);
+					
+					responseMessages.addAll(chat(messages, false));
+				}				
+			}
 		}
 		
 		return responseMessages;
@@ -77,12 +109,15 @@ public class ChatService {
 	
 	private void addConversation(List<Map<String, String>> currentConversation, List<ChatMessage> messages) {
 		for (ChatMessage message : messages) {
-			addConversation(currentConversation, message.getRole(), message.getContent());
+			addConversation(currentConversation, message.getRole(), message.getContent(), message.getToolCallId());
 		}
 	}
 
-	private List<Map<String, String>> addConversation(List<Map<String, String>> currentConversation, String persona, String message) {
+	private List<Map<String, String>> addConversation(List<Map<String, String>> currentConversation, String persona, String message, String toolCallId) {
 		Map<String, String> exchange = Map.of("role", persona, "content", message);
+		if (toolCallId != null) {
+			exchange = Map.of("role", persona, "content", message, "tool_call_id", toolCallId);
+		}
 		currentConversation.add(exchange);
 		
 		return currentConversation;
@@ -112,21 +147,22 @@ public class ChatService {
         return result.toString();
     }
     
-    private String extractToolResponse(Response response) {
-        StringBuilder result = new StringBuilder();
+    private List<ToolsRequest> extractToolResponse(Response response) {
+    	List<ToolsRequest> toolsRequest = new ArrayList<ToolsRequest>();
 
         ObjectMapper objectMapper = new ObjectMapper();
         for (ResponseOutputItem item : response.output()) {
         	if (item.isFunctionCall()) {
-        		logger.info("Function call found in response: " + item);
+        		ToolsRequest toolRequest = new ToolsRequest();
+        		
+        		toolRequest.setCallerId(item.asFunctionCall().id().get());
+        		toolRequest.setFunctionName(item.asFunctionCall().name());
         		
         		String argsString = item.asFunctionCall().arguments();
         		try {
 					@SuppressWarnings("unchecked")
 					Map<String, String> args = objectMapper.readValue(argsString, Map.class);
-					
-					logger.info("Parsed function call arguments: " + args);
-					result.append(args);
+	        		toolRequest.setFunctionArgs(args);
 				} catch (JsonMappingException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -134,9 +170,11 @@ public class ChatService {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
+        		
+        		toolsRequest.add(toolRequest);
         	}
         }
 
-        return result.toString();
+        return toolsRequest;
     }
 }

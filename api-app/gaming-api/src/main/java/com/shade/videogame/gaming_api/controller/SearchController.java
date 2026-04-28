@@ -8,18 +8,18 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.shade.videogame.gaming_api.model.rawg.GameListResponse;
-import com.shade.videogame.gaming_api.service.RawgService;
+import com.shade.videogame.gaming_api.rawg.model.GameListResponse;
+import com.shade.videogame.gaming_api.rawg.service.RawgService;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/search")
 public class SearchController {
     Logger logger = Logger.getLogger(SearchController.class.getName());
 
     @Autowired
     private RawgService rawgService;
 
-    @GetMapping("/search")
+    @GetMapping
     public GameListResponse search(@RequestParam String keyword) {
         GameListResponse response = rawgService.search(keyword);
         logger.info("Search results for '" + keyword + "': " + response);

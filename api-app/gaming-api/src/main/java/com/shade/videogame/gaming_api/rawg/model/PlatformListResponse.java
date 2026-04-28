@@ -1,4 +1,4 @@
-package com.shade.videogame.gaming_api.model.rawg;
+package com.shade.videogame.gaming_api.rawg.model;
 
 import lombok.Data;
 
