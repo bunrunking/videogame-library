@@ -6,10 +6,11 @@ import { MatInputModule } from '@angular/material/input';
 import { MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { SearchService } from './search.service';
-import { SearchResponse } from './searchresponse.model';
+import { SearchResponse } from '../model/searchresponse.model';
 import { AgGridAngular } from 'ag-grid-angular'; // Angular Data Grid Component
 import type { ColDef } from 'ag-grid-community'; // Column Definition Type Interface
 import { Game } from '../model/game.model';
+import { PlatformWrapper } from '../model/platformwrapper.model';
 
 @Component({
   selector: 'app-search',
@@ -23,7 +24,7 @@ export class Search {
   keyword: string = '';
   searchResults: SearchResponse | null = null;
 
-  displayedColumns: string[] = ['name', 'imageUrl'];
+  displayedColumns: string[] = ['name', 'imageUrl', 'platforms'];
   dataSource: Game[] = [];
 
   constructor(private searchService: SearchService) {}
@@ -31,7 +32,11 @@ export class Search {
   onSubmit(form: NgForm) {
     this.searchService.searchGames(this.keyword).subscribe((response: SearchResponse) => {
       this.searchResults = response;
-      this.dataSource = response.results
+      this.dataSource = response.results;
     });
+  }
+
+  formatPlatforms(platforms?: PlatformWrapper[]): string {
+    return platforms?.map(platformWrapper => platformWrapper.platform.name).join(', ') ?? '';
   }
 }

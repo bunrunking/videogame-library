@@ -1,4 +1,4 @@
-import { Game } from "../model/game.model";
+import { Game } from "./game.model";
 
 export interface SearchResponse {
     results: Game[];
