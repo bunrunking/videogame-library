@@ -37,6 +37,7 @@ export class Search {
   }
 
   formatPlatforms(platforms?: PlatformWrapper[]): string {
-    return platforms?.map(platformWrapper => platformWrapper.platform.name).join(', ') ?? '';
+    // Return the platform names in alphabetical order, separated by commas.
+    return platforms?.map(platformWrapper => platformWrapper.platform.name).sort().join(', ') ?? '';
   }
 }
