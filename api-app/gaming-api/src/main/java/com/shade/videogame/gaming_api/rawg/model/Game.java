@@ -10,6 +10,7 @@ import lombok.ToString;
 @Data
 @ToString
 public class Game {
+	private Integer id;
     private String name;
 
     @JsonProperty("background_image")

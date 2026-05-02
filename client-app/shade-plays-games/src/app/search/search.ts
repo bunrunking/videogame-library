@@ -29,7 +29,6 @@ export class Search {
   constructor(private searchService: SearchService) {}
 
   onSubmit(form: NgForm) {
-    console.log(`Searching for: ${this.keyword}`);
     this.searchService.searchGames(this.keyword).subscribe((response: SearchResponse) => {
       this.searchResults = response;
       this.dataSource = response.results
